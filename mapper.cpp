@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 using namespace std;
 
 class GraphPoint
@@ -18,7 +19,8 @@ public:
         onCurve = false;
     }
 
-    void setOnCurve(bool isOnCurve) {
+    void setOnCurve(bool isOnCurve)
+    {
         onCurve = isOnCurve;
     }
 
@@ -31,11 +33,11 @@ public:
         }
         if (x == 0)
         {
-            cout << "- ";
+            cout << "| ";
         }
         else if (y == 0)
         {
-            cout << "| ";
+            cout << "- ";
         }
         else
         {
@@ -48,12 +50,12 @@ const int GRAPH_SIZE = 50;
 
 void printGraph(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE])
 {
-    for (int i = 0; i < GRAPH_SIZE; i++)
+    for (int j = GRAPH_SIZE; j > 0; j--)
     {
-        for (int j = 0; j < GRAPH_SIZE; j++)
+        for (int i = 0; i < GRAPH_SIZE; i++)
         {
             graph[i][j].toString();
-            if (j + 1 == GRAPH_SIZE)
+            if (i + 1 == GRAPH_SIZE)
             {
                 cout << "\n";
             }
@@ -61,17 +63,63 @@ void printGraph(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE])
     }
 }
 
-// y = mx + c
-void equationOfLine(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE], int slope, int constant)
+// ( x - h )^2 + ( y - k )^2 = r^2
+// ... v
+// y = k +- root(r^2 - x^2 + 2xh - h^2) where h = centerX, k = centerY
+void equationOfCircle(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE], float centerX, float centerY, int radius)
 {
     int graphBuffer = GRAPH_SIZE / 2;
     for (int calcX = -(graphBuffer); calcX <= graphBuffer; calcX++)
     {
-        int calcY = (slope * calcX) + constant;
-        if (calcY <= graphBuffer && calcY >= -(graphBuffer)) {
+        double rootCoificient = sqrt(
+            pow(radius, 2) - pow(calcX, 2) + (2 * calcX * centerX) - pow(centerX, 2)
+            );
+        //do + equation
+        double calcY = centerY + rootCoificient;
 
-            graph[calcX+graphBuffer][calcY+graphBuffer].setOnCurve(true);
+        if (calcY <= graphBuffer && calcY >= -(graphBuffer))
+        {
+            int roundedY = round(calcY);
+            graph[calcX + graphBuffer][roundedY + graphBuffer].setOnCurve(true);
+        }
 
+        //do - equation
+        calcY = centerY - rootCoificient;
+
+        if (calcY <= graphBuffer && calcY >= -(graphBuffer))
+        {
+            int roundedY = round(calcY);
+            graph[calcX + graphBuffer][roundedY + graphBuffer].setOnCurve(true);
+        }
+    }
+}
+
+// ax^2+bx+c=0
+void quadraticEquation(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE], float a, float b, int constant)
+{
+    int graphBuffer = GRAPH_SIZE / 2;
+    for (int calcX = -(graphBuffer); calcX <= graphBuffer; calcX++)
+    {
+        double calcY = (a * pow(calcX, 2)) + (b * calcX) + constant;
+        if (calcY <= graphBuffer && calcY >= -(graphBuffer))
+        {
+            int roundedY = round(calcY);
+            graph[calcX + graphBuffer][roundedY + graphBuffer].setOnCurve(true);
+        }
+    }
+}
+
+// y = mx + c
+void equationOfLine(GraphPoint graph[GRAPH_SIZE][GRAPH_SIZE], float slope, int constant)
+{
+    int graphBuffer = GRAPH_SIZE / 2;
+    for (int calcX = -(graphBuffer); calcX <= graphBuffer; calcX++)
+    {
+        double calcY = (slope * calcX) + constant;
+        int roundedY = round(calcY);
+        if (roundedY <= graphBuffer && roundedY >= -(graphBuffer))
+        {
+            graph[calcX + graphBuffer][roundedY + graphBuffer].setOnCurve(true);
         }
     }
 }
@@ -94,7 +142,62 @@ int main()
         currX++;
     }
 
-    equationOfLine(graph, 2,-2);
+    char chosenEquation;
+    cout 
+    << "Please choose graph type:\n"
+    << "l for equation of a line,\n"
+    << "q for quadratic,\n"
+    << "c for circle:\n";
+
+    cin >> chosenEquation;
+
+    int chosenConst;
+    switch (chosenEquation)
+    {
+    case 'l':
+        float chosenSlope;
+        int chosenConst;
+
+        cout << "Please enter slope M: ";
+        cin >> chosenSlope;
+
+        cout << "Please enter constanc C: ";
+        cin >> chosenConst;
+
+        equationOfLine(graph, chosenSlope, chosenConst);
+        break;
+
+    case 'q':
+        float coifA;
+        float coifB;
+        cout << "Please enter coificient A: ";
+        cin >> coifA;
+
+        cout << "Please enter coificient B: ";
+        cin >> coifB;
+
+        cout << "Please enter constant C: ";
+        cin >> chosenConst;
+
+        quadraticEquation(graph, coifA, coifB, chosenConst);
+
+        break;
+    case 'c':
+        float centerX;
+        float centerY;
+        cout << "Please enter center of circle X: ";
+        cin >> centerX;
+
+        cout << "Please enter center of circle Y: ";
+        cin >> centerY;
+
+        cout << "Please enter the radius of the circle: ";
+        cin >> chosenConst;
+
+        equationOfCircle(graph, centerX, centerY, chosenConst);
+
+        break;
+    }
 
     printGraph(graph);
 }
